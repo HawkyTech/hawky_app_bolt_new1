@@ -9,7 +9,26 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
-import { TrendingUp, DollarSign, ShoppingCart, Users, Eye, MapPin, Clock, Star, Package, CircleAlert as AlertCircle, Calendar, ChartBar as BarChart3, ChartPie as PieChart, Activity, ArrowUp, ArrowDown, Filter, Download } from 'lucide-react-native';
+import {
+  TrendingUp,
+  DollarSign,
+  ShoppingCart,
+  Users,
+  Eye,
+  MapPin,
+  Clock,
+  Star,
+  Package,
+  CircleAlert as AlertCircle,
+  Calendar,
+  BarChart3,
+  PieChart,
+  Activity,
+  ArrowUp,
+  ArrowDown,
+  Filter,
+  Download,
+} from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { LineChart, BarChart, PieChart as RNPieChart } from 'react-native-chart-kit';
 import OrdersService from '@/services/orders';
