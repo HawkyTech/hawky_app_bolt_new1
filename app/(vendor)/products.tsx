@@ -8,11 +8,8 @@ import {
   Image,
   Alert,
   Switch,
-  Modal,
-  TextInput,
-  ScrollView,
 } from 'react-native';
-import { Plus, CreditCard as Edit, Trash2, Eye, EyeOff, Search, Filter, SlidersHorizontal, Camera, X, Check } from 'lucide-react-native';
+import { Plus, CreditCard as Edit, Trash2, Eye, EyeOff } from 'lucide-react-native';
 import { Product } from '@/types/user';
 
 const mockProducts: Product[] = [
@@ -56,224 +53,17 @@ const mockProducts: Product[] = [
     isAvailable: true,
     preparationTime: 2,
   },
-  {
-    id: '5',
-    name: 'Samosa',
-    description: 'Crispy triangular pastry with spiced potato filling',
-    price: 20,
-    category: 'Street Food',
-    image: 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg',
-    isAvailable: true,
-    preparationTime: 6,
-  },
-  {
-    id: '6',
-    name: 'Fresh Lime Soda',
-    description: 'Refreshing lime soda with mint',
-    price: 30,
-    category: 'Beverages',
-    image: 'https://images.pexels.com/photos/96974/pexels-photo-96974.jpeg',
-    isAvailable: true,
-    preparationTime: 2,
-  },
 ];
-
-interface EditProductModalProps {
-  visible: boolean;
-  product: Product | null;
-  onClose: () => void;
-  onSave: (product: Product) => void;
-}
-
-function EditProductModal({ visible, product, onClose, onSave }: EditProductModalProps) {
-  const [formData, setFormData] = useState<Product>({
-    id: '',
-    name: '',
-    description: '',
-    price: 0,
-    category: 'Street Food',
-    image: '',
-    isAvailable: true,
-    preparationTime: 5,
-  });
-
-  const categories = ['Street Food', 'Beverages', 'Snacks', 'Sweets', 'Other'];
-
-  React.useEffect(() => {
-    if (product) {
-      setFormData(product);
-    } else {
-      setFormData({
-        id: Date.now().toString(),
-        name: '',
-        description: '',
-        price: 0,
-        category: 'Street Food',
-        image: '',
-        isAvailable: true,
-        preparationTime: 5,
-      });
-    }
-  }, [product]);
-
-  const handleSave = () => {
-    if (!formData.name.trim() || !formData.description.trim() || formData.price <= 0) {
-      Alert.alert('Error', 'Please fill all required fields');
-      return;
-    }
-    onSave(formData);
-    onClose();
-  };
-
-  const handleImageUpload = () => {
-    Alert.alert(
-      'Add Photo',
-      'Choose how you want to add a photo',
-      [
-        { text: 'Camera', onPress: () => console.log('Camera selected') },
-        { text: 'Gallery', onPress: () => console.log('Gallery selected') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={onClose}>
-            <X size={24} color="#8E8E93" />
-          </TouchableOpacity>
-          <Text style={styles.modalTitle}>
-            {product ? 'Edit Product' : 'Add New Product'}
-          </Text>
-          <TouchableOpacity onPress={handleSave}>
-            <Check size={24} color="#4CAF50" />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-          {/* Product Image */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Product Photo</Text>
-            <TouchableOpacity style={styles.imageUpload} onPress={handleImageUpload}>
-              {formData.image ? (
-                <Image source={{ uri: formData.image }} style={styles.uploadedImage} />
-              ) : (
-                <View style={styles.uploadPlaceholder}>
-                  <Camera size={32} color="#8E8E93" />
-                  <Text style={styles.uploadText}>Add Photo</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Product Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Product Name *</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter product name"
-              value={formData.name}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-            />
-          </View>
-
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Description *</Text>
-            <TextInput
-              style={[styles.textInput, styles.textArea]}
-              placeholder="Describe your product..."
-              value={formData.description}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
-          {/* Price and Prep Time */}
-          <View style={styles.rowInputs}>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Price (₹) *</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="0"
-                value={formData.price.toString()}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, price: parseInt(text) || 0 }))}
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Prep Time (min) *</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="0"
-                value={formData.preparationTime.toString()}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, preparationTime: parseInt(text) || 0 }))}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-
-          {/* Category */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Category *</Text>
-            <View style={styles.categoryGrid}>
-              {categories.map((category) => (
-                <TouchableOpacity
-                  key={category}
-                  style={[
-                    styles.categoryOption,
-                    formData.category === category && styles.selectedCategoryOption
-                  ]}
-                  onPress={() => setFormData(prev => ({ ...prev, category }))}
-                >
-                  <Text style={[
-                    styles.categoryOptionText,
-                    formData.category === category && styles.selectedCategoryOptionText
-                  ]}>
-                    {category}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Availability */}
-          <View style={styles.inputGroup}>
-            <View style={styles.switchContainer}>
-              <Text style={styles.inputLabel}>Available for orders</Text>
-              <Switch
-                value={formData.isAvailable}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, isAvailable: value }))}
-                trackColor={{ false: '#E5E5EA', true: '#4CAF50' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-          </View>
-        </ScrollView>
-      </View>
-    </Modal>
-  );
-}
 
 export default function ProductsScreen() {
   const [products, setProducts] = useState(mockProducts);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
+  const categories = ['All', 'Street Food', 'Beverages', 'Snacks'];
 
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = selectedCategory === 'All' 
+    ? products 
+    : products.filter(product => product.category === selectedCategory);
 
   const toggleAvailability = (productId: string) => {
     setProducts(prev => 
@@ -302,26 +92,8 @@ export default function ProductsScreen() {
     );
   };
 
-  const editProduct = (product: Product) => {
-    setEditingProduct(product);
-    setShowEditModal(true);
-  };
-
-  const addProduct = () => {
-    setEditingProduct(null);
-    setShowEditModal(true);
-  };
-
-  const handleSaveProduct = (product: Product) => {
-    if (editingProduct) {
-      // Update existing product
-      setProducts(prev => 
-        prev.map(p => p.id === product.id ? product : p)
-      );
-    } else {
-      // Add new product
-      setProducts(prev => [...prev, product]);
-    }
+  const editProduct = (productId: string) => {
+    Alert.alert('Edit Product', 'Product editing feature coming soon!');
   };
 
   const renderCategoryPill = (category: string) => (
@@ -344,16 +116,14 @@ export default function ProductsScreen() {
 
   const renderProductCard = ({ item: product }: { item: Product }) => (
     <View style={styles.productCard}>
-      {product.image && (
-        <Image source={{ uri: product.image }} style={styles.productImage} />
-      )}
+      <Image source={{ uri: product.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <View style={styles.productHeader}>
           <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
           <View style={styles.productActions}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => editProduct(product)}
+              onPress={() => editProduct(product.id)}
             >
               <Edit size={16} color="#4CAF50" />
             </TouchableOpacity>
@@ -409,90 +179,56 @@ export default function ProductsScreen() {
       <Text style={styles.emptyDescription}>
         Start adding products to showcase your offerings to customers
       </Text>
-      <TouchableOpacity style={styles.addFirstProductButton} onPress={addProduct}>
+      <TouchableOpacity style={styles.addFirstProductButton}>
         <Text style={styles.addFirstProductButtonText}>Add Your First Product</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Products</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(!showFilters)}>
-              <SlidersHorizontal size={20} color="#8E8E93" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addButton} onPress={addProduct}>
-              <Plus size={20} color="#FFFFFF" />
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Search size={20} color="#8E8E93" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search products..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor="#8E8E93"
-            />
-          </View>
-        </View>
-
-        {/* Categories */}
-        {showFilters && (
-          <View style={styles.categoriesContainer}>
-            <FlatList
-              data={categories}
-              renderItem={({ item }) => renderCategoryPill(item)}
-              keyExtractor={(item) => item}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesList}
-            />
-          </View>
-        )}
-
-        {/* Products Count */}
-        <View style={styles.countContainer}>
-          <Text style={styles.countText}>
-            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-            {selectedCategory !== 'All' && ` in ${selectedCategory}`}
-          </Text>
-          <Text style={styles.availableCount}>
-            {filteredProducts.filter(p => p.isAvailable).length} available
-          </Text>
-        </View>
-
-        {/* Products List */}
-        {filteredProducts.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <FlatList
-            data={filteredProducts}
-            renderItem={renderProductCard}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.productsList}
-          />
-        )}
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Products</Text>
+        <TouchableOpacity style={styles.addButton}>
+          <Plus size={20} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>Add Product</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Edit/Add Product Modal */}
-      <EditProductModal
-        visible={showEditModal}
-        product={editingProduct}
-        onClose={() => setShowEditModal(false)}
-        onSave={handleSaveProduct}
-      />
-    </>
+      {/* Categories */}
+      <View style={styles.categoriesContainer}>
+        <FlatList
+          data={categories}
+          renderItem={({ item }) => renderCategoryPill(item)}
+          keyExtractor={(item) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesList}
+        />
+      </View>
+
+      {/* Products Count */}
+      <View style={styles.countContainer}>
+        <Text style={styles.countText}>
+          {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+          {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+        </Text>
+      </View>
+
+      {/* Products List */}
+      {filteredProducts.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProductCard}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.productsList}
+        />
+      )}
+    </View>
   );
 }
 
@@ -509,24 +245,11 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
   },
   headerTitle: {
     fontFamily: 'Inter-Bold',
     fontSize: 24,
     color: '#1C1C1E',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  filterButton: {
-    padding: 8,
   },
   addButton: {
     flexDirection: 'row',
@@ -542,31 +265,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 4,
   },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 48,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    color: '#1C1C1E',
-    marginLeft: 12,
-  },
   categoriesContainer: {
     backgroundColor: '#FFFFFF',
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
   },
   categoriesList: {
     paddingHorizontal: 20,
@@ -590,21 +291,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   countContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
   countText: {
     fontFamily: 'Inter-Medium',
     fontSize: 16,
-    color: '#1C1C1E',
-  },
-  availableCount: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#4CAF50',
+    color: '#8E8E93',
   },
   productsList: {
     paddingHorizontal: 20,
@@ -724,128 +417,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     fontSize: 16,
     color: '#FFFFFF',
-  },
-  // Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  modalTitle: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 20,
-    color: '#1C1C1E',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  inputLabel: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
-    color: '#1C1C1E',
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#F2F2F7',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    color: '#1C1C1E',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  imageUpload: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#F2F2F7',
-    borderStyle: 'dashed',
-    height: 200,
-    overflow: 'hidden',
-  },
-  uploadPlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  uploadText: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
-    color: '#1C1C1E',
-    marginTop: 12,
-  },
-  uploadedImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  rowInputs: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  halfWidth: {
-    width: '48%',
-  },
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  categoryOption: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#F2F2F7',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minWidth: 100,
-  },
-  selectedCategoryOption: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
-  },
-  categoryOptionText: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    color: '#1C1C1E',
-    textAlign: 'center',
-  },
-  selectedCategoryOptionText: {
-    color: '#FFFFFF',
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#F2F2F7',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
   },
 });

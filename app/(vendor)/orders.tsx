@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,47 +6,109 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
-  RefreshControl,
-  Modal,
-  ScrollView,
 } from 'react-native';
-import { Clock, CircleCheck as CheckCircle, Circle as XCircle, Package, Phone, MessageCircle, Filter, Search, Eye, MapPin, Calendar } from 'lucide-react-native';
+import { Clock, CircleCheck as CheckCircle, Circle as XCircle, Package, Phone, MessageCircle } from 'lucide-react-native';
 import { Order } from '@/types/user';
-import OrdersService from '@/services/orders';
-import { OrderData } from '@/types/payment';
+
+const mockOrders: Order[] = [
+  {
+    id: '1',
+    consumerId: 'c1',
+    vendorId: 'v1',
+    products: [
+      { productId: 'p1', productName: 'Pani Puri', quantity: 2, price: 60 },
+      { productId: 'p2', productName: 'Bhel Puri', quantity: 1, price: 50 },
+    ],
+    totalAmount: 170,
+    status: 'pending',
+    deliveryAddress: {
+      id: 'a1',
+      label: 'Home',
+      street: '123 MG Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      pincode: '560001',
+      isDefault: true,
+    },
+    orderDate: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    notes: 'Extra spicy please',
+  },
+  {
+    id: '2',
+    consumerId: 'c2',
+    vendorId: 'v1',
+    products: [
+      { productId: 'p3', productName: 'Vada Pav', quantity: 3, price: 25 },
+      { productId: 'p4', productName: 'Masala Chai', quantity: 2, price: 15 },
+    ],
+    totalAmount: 105,
+    status: 'preparing',
+    deliveryAddress: {
+      id: 'a2',
+      label: 'Office',
+      street: '456 Brigade Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      pincode: '560025',
+      isDefault: false,
+    },
+    orderDate: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    estimatedDeliveryTime: '15 minutes',
+  },
+  {
+    id: '3',
+    consumerId: 'c3',
+    vendorId: 'v1',
+    products: [
+      { productId: 'p1', productName: 'Pani Puri', quantity: 1, price: 60 },
+    ],
+    totalAmount: 60,
+    status: 'ready',
+    deliveryAddress: {
+      id: 'a3',
+      label: 'Home',
+      street: '789 Commercial Street',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      pincode: '560001',
+      isDefault: true,
+    },
+    orderDate: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    estimatedDeliveryTime: '5 minutes',
+  },
+  {
+    id: '4',
+    consumerId: 'c4',
+    vendorId: 'v1',
+    products: [
+      { productId: 'p2', productName: 'Bhel Puri', quantity: 2, price: 50 },
+      { productId: 'p4', productName: 'Masala Chai', quantity: 1, price: 15 },
+    ],
+    totalAmount: 115,
+    status: 'delivered',
+    deliveryAddress: {
+      id: 'a4',
+      label: 'Home',
+      street: '321 Indiranagar',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      pincode: '560038',
+      isDefault: true,
+    },
+    orderDate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+];
 
 export default function OrdersScreen() {
-  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [orders, setOrders] = useState(mockOrders);
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<OrderData | null>(null);
-  const [showOrderDetails, setShowOrderDetails] = useState(false);
 
   const statusFilters = [
-    { id: 'all', label: 'All Orders' },
-    { id: 'pending', label: 'Pending' },
-    { id: 'confirmed', label: 'Confirmed' },
-    { id: 'preparing', label: 'Preparing' },
-    { id: 'out_for_delivery', label: 'Out for Delivery' },
-    { id: 'delivered', label: 'Delivered' },
+    { id: 'all', label: 'All Orders', count: orders.length },
+    { id: 'pending', label: 'Pending', count: orders.filter(o => o.status === 'pending').length },
+    { id: 'preparing', label: 'Preparing', count: orders.filter(o => o.status === 'preparing').length },
+    { id: 'ready', label: 'Ready', count: orders.filter(o => o.status === 'ready').length },
   ];
-
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-  const loadOrders = async () => {
-    setIsLoading(true);
-    try {
-      const allOrders = OrdersService.getAllOrders();
-      setOrders(allOrders);
-    } catch (error) {
-      console.error('Error loading orders:', error);
-      Alert.alert('Error', 'Failed to load orders');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const filteredOrders = selectedStatus === 'all' 
     ? orders 
@@ -57,7 +119,7 @@ export default function OrdersScreen() {
       case 'pending': return '#FF9800';
       case 'confirmed': return '#2196F3';
       case 'preparing': return '#FF5722';
-      case 'out_for_delivery': return '#4CAF50';
+      case 'ready': return '#4CAF50';
       case 'delivered': return '#8BC34A';
       case 'cancelled': return '#F44336';
       default: return '#8E8E93';
@@ -69,7 +131,7 @@ export default function OrdersScreen() {
       case 'pending': return Clock;
       case 'confirmed': return CheckCircle;
       case 'preparing': return Package;
-      case 'out_for_delivery': return Package;
+      case 'ready': return CheckCircle;
       case 'delivered': return CheckCircle;
       case 'cancelled': return XCircle;
       default: return Clock;
@@ -81,7 +143,7 @@ export default function OrdersScreen() {
       case 'pending': return 'Pending';
       case 'confirmed': return 'Confirmed';
       case 'preparing': return 'Preparing';
-      case 'out_for_delivery': return 'Out for Delivery';
+      case 'ready': return 'Ready for Pickup';
       case 'delivered': return 'Delivered';
       case 'cancelled': return 'Cancelled';
       default: return status;
@@ -104,33 +166,22 @@ export default function OrdersScreen() {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const success = await OrdersService.updateOrderStatus(orderId, newStatus as any);
-      if (success) {
-        setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { ...order, status: newStatus as any }
-              : order
-          )
-        );
-        Alert.alert('Success', `Order status updated to ${getStatusText(newStatus)}`);
-      } else {
-        Alert.alert('Error', 'Failed to update order status');
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      Alert.alert('Error', 'Failed to update order status');
-    }
+  const updateOrderStatus = (orderId: string, newStatus: string) => {
+    setOrders(prev => 
+      prev.map(order => 
+        order.id === orderId 
+          ? { ...order, status: newStatus as any }
+          : order
+      )
+    );
   };
 
-  const handleStatusUpdate = (order: OrderData) => {
+  const handleStatusUpdate = (order: Order) => {
     const nextStatus = {
       'pending': 'confirmed',
       'confirmed': 'preparing',
-      'preparing': 'out_for_delivery',
-      'out_for_delivery': 'delivered',
+      'preparing': 'ready',
+      'ready': 'delivered',
     };
 
     const next = nextStatus[order.status as keyof typeof nextStatus];
@@ -139,17 +190,12 @@ export default function OrdersScreen() {
     }
   };
 
-  const handleContactCustomer = (order: OrderData) => {
-    Alert.alert('Contact Customer', `Contact ${order.customerDetails.customerName}?`, [
-      { text: 'Cancel', style: 'cancel' },
+  const handleContactCustomer = (orderId: string) => {
+    Alert.alert('Contact Customer', 'Choose contact method:', [
       { text: 'Call', onPress: () => console.log('Calling customer') },
       { text: 'Message', onPress: () => console.log('Messaging customer') },
+      { text: 'Cancel', style: 'cancel' },
     ]);
-  };
-
-  const handleViewOrderDetails = (order: OrderData) => {
-    setSelectedOrder(order);
-    setShowOrderDetails(true);
   };
 
   const renderStatusFilter = (filter: any) => (
@@ -175,21 +221,21 @@ export default function OrdersScreen() {
           styles.statusCountText,
           selectedStatus === filter.id && styles.activeStatusCountText
         ]}>
-          {filter.id === 'all' ? orders.length : orders.filter(o => o.status === filter.id).length}
+          {filter.count}
         </Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderOrderCard = ({ item: order }: { item: OrderData }) => {
+  const renderOrderCard = ({ item: order }: { item: Order }) => {
     const StatusIcon = getStatusIcon(order.status);
-    const canUpdateStatus = ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status);
+    const canUpdateStatus = ['pending', 'confirmed', 'preparing', 'ready'].includes(order.status);
     
     return (
       <View style={styles.orderCard}>
         <View style={styles.orderHeader}>
-          <Text style={styles.orderId}>Order #{order.id.slice(-6)}</Text>
-          <Text style={styles.orderTime}>{getTimeAgo(order.createdAt)}</Text>
+          <Text style={styles.orderId}>Order #{order.id}</Text>
+          <Text style={styles.orderTime}>{getTimeAgo(order.orderDate)}</Text>
         </View>
 
         <View style={styles.orderStatus}>
@@ -201,45 +247,37 @@ export default function OrdersScreen() {
           </Text>
         </View>
 
-        <View style={styles.customerInfo}>
-          <Text style={styles.customerName}>{order.customerDetails.customerName}</Text>
-          <Text style={styles.customerPhone}>{order.customerDetails.phoneNumber}</Text>
-        </View>
-
         <View style={styles.orderItems}>
-          {order.items.slice(0, 2).map((item, index) => (
+          {order.products.map((item, index) => (
             <Text key={index} style={styles.orderItem}>
               {item.quantity}x {item.productName}
             </Text>
           ))}
-          {order.items.length > 2 && (
-            <Text style={styles.moreItems}>+{order.items.length - 2} more items</Text>
-          )}
         </View>
 
         <View style={styles.orderAddress}>
-          <MapPin size={14} color="#8E8E93" />
-          <Text style={styles.addressText} numberOfLines={1}>
+          <Text style={styles.addressLabel}>Delivery to:</Text>
+          <Text style={styles.addressText}>
             {order.deliveryAddress.street}, {order.deliveryAddress.city}
           </Text>
         </View>
+
+        {order.notes && (
+          <View style={styles.orderNotes}>
+            <Text style={styles.notesLabel}>Notes:</Text>
+            <Text style={styles.notesText}>{order.notes}</Text>
+          </View>
+        )}
 
         <View style={styles.orderFooter}>
           <Text style={styles.orderTotal}>₹{order.totalAmount}</Text>
           
           <View style={styles.orderActions}>
             <TouchableOpacity
-              style={styles.viewButton}
-              onPress={() => handleViewOrderDetails(order)}
-            >
-              <Eye size={16} color="#4CAF50" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
               style={styles.contactButton}
-              onPress={() => handleContactCustomer(order)}
+              onPress={() => handleContactCustomer(order.id)}
             >
-              <Phone size={16} color="#2196F3" />
+              <Phone size={16} color="#4CAF50" />
             </TouchableOpacity>
             
             {canUpdateStatus && (
@@ -250,131 +288,14 @@ export default function OrdersScreen() {
                 <Text style={styles.updateButtonText}>
                   {order.status === 'pending' && 'Accept'}
                   {order.status === 'confirmed' && 'Start Preparing'}
-                  {order.status === 'preparing' && 'Ready for Delivery'}
-                  {order.status === 'out_for_delivery' && 'Mark Delivered'}
+                  {order.status === 'preparing' && 'Mark Ready'}
+                  {order.status === 'ready' && 'Mark Delivered'}
                 </Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
       </View>
-    );
-  };
-
-  const renderOrderDetailsModal = () => {
-    if (!selectedOrder) return null;
-
-    return (
-      <Modal
-        visible={showOrderDetails}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowOrderDetails(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowOrderDetails(false)}>
-              <Text style={styles.modalCloseText}>Close</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Order Details</Text>
-            <View style={styles.placeholder} />
-          </View>
-
-          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            {/* Order Info */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Order Information</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Order ID:</Text>
-                <Text style={styles.detailValue}>#{selectedOrder.id.slice(-6)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Status:</Text>
-                <Text style={[styles.detailValue, { color: getStatusColor(selectedOrder.status) }]}>
-                  {getStatusText(selectedOrder.status)}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Order Date:</Text>
-                <Text style={styles.detailValue}>
-                  {new Date(selectedOrder.createdAt).toLocaleDateString()} at{' '}
-                  {new Date(selectedOrder.createdAt).toLocaleTimeString()}
-                </Text>
-              </View>
-            </View>
-
-            {/* Customer Details */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Customer Details</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Name:</Text>
-                <Text style={styles.detailValue}>{selectedOrder.customerDetails.customerName}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Phone:</Text>
-                <Text style={styles.detailValue}>{selectedOrder.customerDetails.phoneNumber}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Email:</Text>
-                <Text style={styles.detailValue}>{selectedOrder.customerDetails.email}</Text>
-              </View>
-            </View>
-
-            {/* Delivery Address */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Delivery Address</Text>
-              <Text style={styles.addressDetail}>
-                {selectedOrder.deliveryAddress.street}{'\n'}
-                {selectedOrder.deliveryAddress.city}, {selectedOrder.deliveryAddress.state}{'\n'}
-                {selectedOrder.deliveryAddress.pincode}
-              </Text>
-            </View>
-
-            {/* Order Items */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Order Items</Text>
-              {selectedOrder.items.map((item, index) => (
-                <View key={index} style={styles.itemDetail}>
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName}>{item.productName}</Text>
-                    <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
-                  </View>
-                  <Text style={styles.itemPrice}>₹{item.price * item.quantity}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Payment Details */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Payment Details</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Payment ID:</Text>
-                <Text style={styles.detailValue}>{selectedOrder.paymentDetails.paymentId}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Amount:</Text>
-                <Text style={styles.detailValue}>₹{selectedOrder.paymentDetails.amount}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Status:</Text>
-                <Text style={[styles.detailValue, { color: '#4CAF50' }]}>
-                  {selectedOrder.paymentDetails.status}
-                </Text>
-              </View>
-            </View>
-
-            {/* Special Instructions */}
-            {selectedOrder.customerDetails.specialInstructions && (
-              <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Special Instructions</Text>
-                <Text style={styles.instructionsText}>
-                  {selectedOrder.customerDetails.specialInstructions}
-                </Text>
-              </View>
-            )}
-          </ScrollView>
-        </View>
-      </Modal>
     );
   };
 
@@ -389,53 +310,40 @@ export default function OrdersScreen() {
   );
 
   return (
-    <>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Orders</Text>
-          <Text style={styles.headerSubtitle}>
-            Manage your customer orders
-          </Text>
-        </View>
-
-        {/* Status Filters */}
-        <View style={styles.filtersContainer}>
-          <FlatList
-            data={statusFilters}
-            renderItem={({ item }) => renderStatusFilter(item)}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filtersList}
-          />
-        </View>
-
-        {/* Orders List */}
-        {filteredOrders.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <FlatList
-            data={filteredOrders}
-            renderItem={renderOrderCard}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.ordersList}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading}
-                onRefresh={loadOrders}
-                colors={['#4CAF50']}
-                tintColor="#4CAF50"
-              />
-            }
-          />
-        )}
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Orders</Text>
+        <Text style={styles.headerSubtitle}>
+          Manage your customer orders
+        </Text>
       </View>
 
-      {/* Order Details Modal */}
-      {renderOrderDetailsModal()}
-    </>
+      {/* Status Filters */}
+      <View style={styles.filtersContainer}>
+        <FlatList
+          data={statusFilters}
+          renderItem={({ item }) => renderStatusFilter(item)}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersList}
+        />
+      </View>
+
+      {/* Orders List */}
+      {filteredOrders.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={filteredOrders}
+          renderItem={renderOrderCard}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.ordersList}
+        />
+      )}
+    </View>
   );
 }
 
@@ -449,11 +357,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
   },
   headerTitle: {
     fontFamily: 'Inter-Bold',
@@ -469,8 +372,6 @@ const styles = StyleSheet.create({
   filtersContainer: {
     backgroundColor: '#FFFFFF',
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
   },
   filtersList: {
     paddingHorizontal: 20,
@@ -564,46 +465,46 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
   },
-  customerInfo: {
-    marginBottom: 12,
-  },
-  customerName: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
-    color: '#1C1C1E',
-    marginBottom: 2,
-  },
-  customerPhone: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#8E8E93',
-  },
   orderItems: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   orderItem: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: '#1C1C1E',
-    marginBottom: 2,
-  },
-  moreItems: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#8E8E93',
-    fontStyle: 'italic',
+    marginBottom: 4,
   },
   orderAddress: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  addressLabel: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#8E8E93',
+    marginBottom: 4,
   },
   addressText: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
+    color: '#1C1C1E',
+  },
+  orderNotes: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  notesLabel: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 12,
     color: '#8E8E93',
-    marginLeft: 8,
-    flex: 1,
+    marginBottom: 4,
+  },
+  notesText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#1C1C1E',
+    fontStyle: 'italic',
   },
   orderFooter: {
     flexDirection: 'row',
@@ -618,33 +519,25 @@ const styles = StyleSheet.create({
   orderActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  viewButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E8F5E8',
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
   },
   contactButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E3F2FD',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F5E8',
     alignItems: 'center',
     justifyContent: 'center',
   },
   updateButton: {
     backgroundColor: '#4CAF50',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 12,
   },
   updateButtonText: {
     fontFamily: 'Inter-SemiBold',
-    fontSize: 12,
+    fontSize: 14,
     color: '#FFFFFF',
   },
   emptyState: {
@@ -666,113 +559,5 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     textAlign: 'center',
     lineHeight: 24,
-  },
-  // Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  modalCloseText: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
-    color: '#4CAF50',
-  },
-  modalTitle: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 20,
-    color: '#1C1C1E',
-  },
-  placeholder: {
-    width: 50,
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  detailSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  detailSectionTitle: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 16,
-    color: '#1C1C1E',
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailLabel: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#8E8E93',
-  },
-  detailValue: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#1C1C1E',
-    flex: 1,
-    textAlign: 'right',
-  },
-  addressDetail: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#1C1C1E',
-    lineHeight: 20,
-  },
-  itemDetail: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#1C1C1E',
-  },
-  itemQuantity: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: '#8E8E93',
-  },
-  itemPrice: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#4CAF50',
-  },
-  instructionsText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#1C1C1E',
-    lineHeight: 20,
-    fontStyle: 'italic',
-    backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 8,
   },
 });

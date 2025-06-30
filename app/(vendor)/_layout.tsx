@@ -15,7 +15,7 @@ export default function VendorTabLayout() {
           tabBarLabelStyle: styles.tabBarLabel,
         }}>
         <Tabs.Screen
-          name="dashboard"
+          name="index"
           options={{
             title: 'Dashboard',
             tabBarIcon: ({ size, color }) => (
